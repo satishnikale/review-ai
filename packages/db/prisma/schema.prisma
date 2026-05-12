@@ -1,0 +1,93 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DIRECT_URL")
+}
+
+model User {
+    id            String          @id @default(cuid())
+    githubId      String          @unique
+    username      String
+    email         String?
+    avatarUrl     String?
+    accessToken   String
+    createdAt     DateTime        @default(now())
+    updatedAt     DateTime        @updatedAt
+    reviews       Review[]
+    preferences   UserPreference?
+    refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+    id        String   @id @default(cuid())
+    token     String   @unique
+    userId    String
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+    id         String          @id @default(cuid())
+    userId     String
+    prUrl      String
+    repoName   String
+    prTitle    String?
+    prNumber   Int
+    status     ReviewStatus    @default(PENDING)
+    reviewedAt DateTime?
+    createdAt  DateTime        @default(now())
+    updatedAt  DateTime        @updatedAt
+    user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+    comments   ReviewComment[]
+}
+
+model ReviewComment {
+    id         String          @id @default(cuid())
+    reviewId   String
+    filePath   String
+    lineNumber Int
+    category   CommentCategory
+    severity   Severity
+    comment    String
+    suggestion String?
+    createdAt  DateTime        @default(now())
+    review     Review          @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+}
+
+model UserPreference {
+    userId      String   @id
+    checkBugs   Boolean  @default(true)
+    checkSec    Boolean  @default(true)
+    checkPerf   Boolean  @default(true)
+    checkStyle  Boolean  @default(false)
+    emailNotify Boolean  @default(true)
+    updatedAt   DateTime @updatedAt
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ReviewStatus {
+    PENDING
+    PROCESSING
+    DONE
+    FAILED
+}
+
+enum CommentCategory {
+    BUG
+    SECURITY
+    PERFORMANCE
+    STYLE
+    SUGGESTION
+}
+
+enum Severity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}

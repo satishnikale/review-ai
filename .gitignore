@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# builds
+dist
+.next
+out
+build
+
+# prisma generated
+packages/db/generated/
+
+# env files
+.env
+.env.local
+.env.production
+packages/db/.env
+
+# turbo
+.turbo
+
+# logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# docker
+docker-compose.override.yml
