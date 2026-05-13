@@ -12,10 +12,11 @@ import { env } from "./lib/env";
 import { logger } from "./lib/logger";
 import { errorHandler } from "./middleware/errorHandler";
 import { healthRouter } from "./routes/health";
+import { githubOAuthRouter } from "./routes/auth/github";
 
 const app: Application = express();
 
-// ── Security middleware ──────────────────────────────────────────
+// ----- Security middleware --------------------------------------
 app.use(helmet());
 app.use(
   cors({
@@ -24,7 +25,7 @@ app.use(
   }),
 );
 
-// ── Rate limiting ────────────────────────────────────────────────
+// ------ Rate limiting -------------------------------------------
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -35,17 +36,19 @@ app.use(
   }),
 );
 
-// ── Body parsing ─────────────────────────────────────────────────
+// --- Body parsing ------------------------------------------------
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// ── Routes ───────────────────────────────────────────────────────
+// --- Routes -------------------------------------------------------
 app.use("/health", healthRouter);
 
-// ── Error handler (must be last) ─────────────────────────────────
+app.use("/api/auth", githubOAuthRouter);
+
+// --- Error handler (must be last) ----------------------------------
 app.use(errorHandler);
 
-// ── Start ────────────────────────────────────────────────────────
+// --- Start ---------------------------------------------------------
 const PORT = parseInt(env.PORT, 10);
 
 app.listen(PORT, () => {
