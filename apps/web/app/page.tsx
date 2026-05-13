@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center p-8">
@@ -7,11 +9,11 @@ export default function HomePage() {
                     AI-powered GitHub PR reviews
                 </p>
 
-                < a href="/api/auth/github"
+                < Link href="http://localhost:4000/api/auth/github"
                     className="inline-block bg-brand-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-brand-700 transition-colors"
                 >
                     Continue with GitHub
-                </a>
+                </Link>
             </div>
         </div>
     );
