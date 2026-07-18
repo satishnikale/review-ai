@@ -1,9 +1,20 @@
 import pino from "pino";
 
+// Do not import the validated env module here: logging is used while booting.
+const isDev = process.env.NODE_ENV !== "production";
 export const logger = pino({
-  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  level: isDev ? "debug" : "info",
+
   transport:
-    process.env.NODE_ENV === "development"
-      ? { target: "pino-pretty", options: { colorize: true } }
+    isDev
+      ? {
+          target: "pino-pretty",
+          options: {
+            colorize: true,
+            singleLine: true,
+            translateTime: "SYS:standard",
+            ignore: "pid,hostname",
+          },
+        }
       : undefined,
 });

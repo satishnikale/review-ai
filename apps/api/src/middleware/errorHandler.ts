@@ -1,30 +1,26 @@
-import { Request, Response, NextFunction } from "express";
+import type { ErrorRequestHandler } from "express";
 import { ZodError } from "zod";
 import { logger } from "../lib/logger";
+import { AppError } from "../utils/AppError";
 
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
-  logger.error({ err, path: req.path, method: req.method }, "Unhandled error");
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (res.headersSent) {
+    return;
+  }
+
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({ error: err.message, code: err.code });
+    return;
+  }
 
   if (err instanceof ZodError) {
     res.status(400).json({
       error: "Validation failed",
-      issues: err.issues.map((i) => ({
-        field: i.path.join("."),
-        message: i.message,
-      })),
+      issues: err.issues,
     });
     return;
   }
 
-  res.status(500).json({
-    error:
-      process.env.NODE_ENV === "production"
-        ? "Internal server error"
-        : err.message,
-  });
-}
+  logger.error({ err }, "Unhandled API error");
+  res.status(500).json({ error: "Internal server error" });
+};

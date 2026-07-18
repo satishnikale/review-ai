@@ -1,30 +1,37 @@
-import { Request, Response, NextFunction } from "express";
-import { verify } from "jsonwebtoken";
-import { env } from "../lib/env";
+import type { NextFunction, Request, Response } from "express";
+import { safeVerifyToken, TokenError } from "../lib/jwt";
+import { prisma } from "../lib/prisma";
+import { UnauthorizedError } from "../utils/AppError";
 
-export interface AuthRequest extends Request {
-  userId: string;
-}
-
-export function requireAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const header = req.headers.authorization;
-
-  if (!header || !header.startsWith("Bearer ")) {
-    res.status(401).json({ error: "No token provided" });
-    return;
-  }
-
-  const token = header.split(" ")[1];
-
+export async function requireAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
   try {
-    const payload = verify(token, env.JWT_SECRET) as { sub: string };
-    (req as AuthRequest).userId = payload.sub;
+    const header = req.header("authorization");
+    const queryToken = typeof req.query.token === "string" ? req.query.token : undefined;
+
+    if (!header?.startsWith("Bearer ") && !queryToken) {
+      throw new UnauthorizedError("Missing bearer token");
+    }
+
+    const token = queryToken ?? header?.slice("Bearer ".length);
+    if (!token) {
+      throw new UnauthorizedError("Missing bearer token");
+    }
+    const payload = safeVerifyToken(token);
+
+    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+
+    if (!user) {
+      throw new UnauthorizedError("Authenticated user no longer exists");
+    }
+
+    req.userId = user.id;
+    req.user = user;
     next();
-  } catch {
-    res.status(401).json({ error: "Invalid or expired token" });
+  } catch (err) {
+    if (err instanceof TokenError) {
+      next(new UnauthorizedError(err.message));
+      return;
+    }
+    next(err);
   }
 }
