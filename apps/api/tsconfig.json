@@ -1,14 +1,14 @@
 {
   "extends": "@repo/typescript-config/node.json",
   "compilerOptions": {
-     "module": "NodeNext",
+    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "rootDir": "./src",
-    // "baseUrl": ".",
+    "rootDir": "../..",
+    "baseUrl": ".",
     "paths": {
-      "@repo/db": ["../../../packages/db/src/index.ts"],
-      "@repo/validators": ["../../../packages/validators/src/index.ts"]
+      "@repo/db": ["../../packages/db/src/index.ts"],
+      "@repo/validators": ["../../packages/validators/src/index.ts"]
     }
   },
   "include": ["src/**/*"],
